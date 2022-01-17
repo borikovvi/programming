@@ -1,7 +1,32 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <windows.h>
+
+const char* stations[] = { "Девяткино", "Гр.Проспект", "Академическая", "Политехническая", "Площадь мужества", "Лесная", "Выборгская", "Площадь Ленина", "Чернышевская", "Площадь Восстания", "Владимирская", "Пушкинская", "Техн.Институт 1", "Балтийская", "Нарвская", "Кировский завод", "Автово", "Ленинский роспект", "Проспект Ветеранов", "Парнас", "Проспект Просвящения", "Озерки", "Удельная", "Пионерская", "Черная речка", "Петроградская", "Горьковская", "Невский проспект", "Сенная площадь", "Техн.Институт 2", "Фрунзенская", "Московские ворота", "Электросила", "Парк Победы", "Московская", "Звездная", "Купчино", "Беговая", "Зенит", "Приморская", "Василеостровская", "Гостиный двор", "Маяковская", "Пл.Александра Невского 1", "Елизаровская", "Ломоносовская", "Пролетарская", "Обухово", "Рыбацкое", "Спасская", "Достоевская", "Лиговский проспект", "Пл.Александра Невского 2", "Новочеркасская", "Ладожская", "Проспект Большевиков", "Улица Дыбенко", "Комендантский проспект", "Старая деревня", "Крестовский остров", "Чкаловская", "Спортивная", "Адмиралтейская", "Садовая", "Звенигородская", "Обводный канал", "Волковская", "Бухарестская", "Международная", "Проспект Славы", "Дунайская", "Шушары" };
+
+char* gets(char* s)
+{
+	fflush(stdin);
+
+	int i, k = getchar();
+
+	if (k == EOF)
+		return NULL;
+
+	for (i = 0; k != EOF && k != '\n'; ++i) {
+		s[i] = k;
+		k = getchar();
+
+		if (k == EOF && !feof(stdin))
+			return NULL;
+	}
+
+	s[i] = '\0';
+
+	return s;
+}
 
 int getStationIndex(char* station)
 {
@@ -211,261 +236,110 @@ bool isInMinHeap(struct MinHeap* minHeap, int v)
 	return false;
 }
 
-char** ptr_name_of_statiton;
-int** ptr_map_time;
-int station_1 = -1, station_2 = -1;
-int N = 1;
-int rush_hour_mode = 0;
-void input() {
-    FILE* input;
-    input = fopen("input.txt", "r");
-    char city[500] = { NULL };
-    fgets(city, 500, input);
-    while (1) {
-        char ch;
-        fscanf(input, "%c", &ch);
-        if (ch == 10) break;
-        if (ch == 32) N++;
-    }
-    fclose(input);
-    input = fopen("input.txt", "r");
+void dijkstra(struct Graph* graph, int src, int dest)
+{
+	int V = graph->V;
 
+	int* dist = (int*)malloc(V * sizeof(int));
 
-    fgets(city, 500, input);
-    printf("%s", city);
+	struct MinHeap* minHeap = createMinHeap(V);
 
+	for (int v = 0; v < V; ++v)
+	{
+		dist[v] = INT_MAX;
+		minHeap->array[v] = newMinHeapNode(v,
+			dist[v]);
+		minHeap->pos[v] = v;
+	}
 
-    char** name_of_statiton = NULL;
-    name_of_statiton = (char**)calloc(N, sizeof(char*));
-    for (int i = 0; i < N; i++) {
-        name_of_statiton[i] = (char*)calloc(30, sizeof(char));
-    }
+	minHeap->array[src] =
+		newMinHeapNode(src, dist[src]);
+	minHeap->pos[src] = src;
+	dist[src] = 0;
+	decreaseKey(minHeap, src, dist[src]);
 
-    int i_name = 0, j_name = 0;
-    while (1) {
-        int x = fgetc(input);
-        if (x == 10) break;
-        if (x == 32) {
-            i_name++;
-            j_name = 0;
-            continue;
-        }
-        name_of_statiton[i_name][j_name] = x;
-        j_name++;
+	minHeap->size = V;
 
-    }
-    ptr_name_of_statiton = name_of_statiton;
+	int way[100][3];
+	int size = 0;
 
-    int** map_time = NULL;
-    map_time = (int**)calloc(N, sizeof(int*));
-    for (int i = 0; i < N; i++) {
-        map_time[i] = (int*)calloc(N, sizeof(int));
-    }
-    ptr_map_time = map_time;
+	while (!isEmpty(minHeap))
+	{
+		struct MinHeapNode* minHeapNode =
+			extractMin(minHeap);
 
+		int u = minHeapNode->v;
 
-    int g;
-    char s[6] = { NULL };
-    printf("Укажите время начала Вашей поездки: ");
-    fgets(s, 6, stdin);
-    getchar();
-    double x = atof(s);
+		struct AdjListNode* pCrawl =
+			graph->array[u].head;
+		while (pCrawl != NULL)
+		{
+			int v = pCrawl->dest;
 
-    printf("\n");
-    if (x >= 0 && x < 6) {
-        printf("К сожалению, в указанное Вами время метрополитен закрыт. Попробуйте выбрать другое время для поездки.\n");
-        printf("Укажите время начала Вашей поездки: \n");
-        fgets(s, 6, stdin);
-        getchar();
-        double x = atof(s);
+			if (isInMinHeap(minHeap, v) &&
+				dist[u] != INT_MAX &&
+				pCrawl->weight + dist[u] < dist[v])
+			{
+				dist[v] = dist[u] + pCrawl->weight;
+				way[size][0] = u;
+				way[size][1] = v;
+				way[size][2] = dist[v];
+				size++;
+				decreaseKey(minHeap, v, dist[v]);
+			}
+			pCrawl = pCrawl->next;
+		}
+	}
 
-    }
-    
-    if ((x >= 6 && x < 12) || (x >= 18 && x < 24)) {
-        rush_hour_mode = 1;
-        while (1) {
-            fscanf(input, "%d", &g);
-            if (g == 777) break;
-        }
-    }
-
-
-
-
-    int i_map = 0, j_map = 0;
-    while (!feof(input)) {
-        int z;
-        fscanf(input, "%d", &z);
-        if (z == 777) break;
-        map_time[i_map][j_map] = z;
-        j_map++;
-        if (fgetc(input) == 10) {
-            i_map++;
-            j_map = 0;
-        }
-    }
-
-    fclose(input);
+	printf("\nВывод кратчайшего пути:\n");
+	int i = size - 1;
+	bool last = false;
+	int minutes = 0;
+	while (i >= 0)
+	{
+		if (way[i][1] == dest)
+		{
+			printf("%4d мин -> %s\n", way[i][2], stations[way[i][1]]);
+			if (!last)
+			{
+				last = true;
+				minutes = way[i][2];
+			}
+			dest = way[i][0];
+		}
+		i--;
+	}
+	printf("Время вашего пути составит: %d мин\n", minutes);
 }
 
-void where_go(char** names) {
-    char st_1[30] = { NULL };
-    char st_2[30] = { NULL };
-    printf("Ниже укажите, пожалуйста, две станции.\n");
-
-
-    while (1) {
-        printf("ОТКУДА: ");
-        fgets(st_1, 30, stdin);
-        for (int i = 29; i >= 0; i--) {
-            if (st_1[i] != 0) {
-                st_1[i] = 0;
-                break;
-            }
-        }
-        int count_st_1 = strlen(st_1);
-        for (int i = 0; i < N; i++) {
-            if (strcmp(st_1, ptr_name_of_statiton[i]) == 0) station_1 = i;
-        }
-        if (station_1 == -1) {
-            printf("Ошибка! Некорректный ввод! Пожалуйста, введите название станции еще раз.\n");
-        }
-        else break;
-    }
-    while (1) {
-        printf("КУДА: ");
-        fgets(st_2, 30, stdin);
-        for (int i = 29; i >= 0; i--) {
-            if (st_2[i] != 0) {
-                st_2[i] = 0;
-                break;
-            }
-        }
-        int count_st_2 = strlen(st_2);
-        for (int i = 0; i < N; i++) {
-            if (strcmp(st_2, ptr_name_of_statiton[i]) == 0) station_2 = i;
-        }
-        if (station_2 == -1) {
-            printf("Ошибка! Некорректный ввод! Пожалуйста, введите название станции еще раз.\n");
-        }
-        else break;
-    }
-}
 
 int main()
 {
-    SetConsoleCP(1251);
-    SetConsoleOutputCP(1251);
-    setlocale(LC_ALL, "Russian");
+	SetConsoleOutputCP(1251);
+	SetConsoleCP(1251);
 
+	int V = 72;
+	struct Graph* graph = createGraph(V);
 
-    int choice = 1;
+	int menu = 1;
+	char from[30], to[30];
+	while (menu != 0)
+	{
+		system("cls");
+		printf("Ниже укажите пожалуйста две станции\n");
+		printf("ОТКУДА: ");
+		gets(from);
+		printf("КУДА: ");
+		gets(to);
+		dijkstra(graph, getStationIndex(from), getStationIndex(to));
+		printf("\nМЕНЮ. Введите, пожалуйста:\n");
+		printf("ЛЮБОЕ ЧИСЛО - продолжить работу\n");
+		printf("     0      - завершить работу\n");
+		printf("Действие: ");
+		scanf("%d", &menu);
+		fseek(stdin, 0, SEEK_END);
+	}
 
-    while (choice != 0) {
-        input();
-        where_go(ptr_name_of_statiton);
-
-        int* d = (int*)calloc(N, sizeof(int));
-        int* v = (int*)calloc(N, sizeof(int));
-        int temp, minindex, min;
-        int begin_index = station_1;
-
-        for (int i = 0; i < N; i++)
-        {
-            d[i] = 10000;
-            v[i] = 1;
-        }
-        d[begin_index] = 0;
-        
-        do {
-            minindex = 10000;
-            min = 10000;
-            for (int i = 0; i < N; i++)
-            {
-                if ((v[i] == 1) && (d[i] < min))
-                {
-                    min = d[i];
-                    minindex = i;
-                }
-            }
-
-            if (minindex != 10000)
-            {
-                for (int i = 0; i < N; i++)
-                {
-                    if (ptr_map_time[minindex][i] > 0)
-                    {
-                        temp = min + ptr_map_time[minindex][i];
-                        if (temp < d[i])
-                        {
-                            d[i] = temp;
-                        }
-                    }
-                }
-                v[minindex] = 0;
-            }
-        } while (minindex < 10000);
-
-        int* ver = (int*)calloc(N, sizeof(int));
-        int end = station_2;
-        ver[0] = end;
-        int k = 1;
-        int weight = d[end];
-
-        while (end != begin_index)
-        {
-            for (int i = 0; i < N; i++)
-                if (ptr_map_time[i][end] != 0)
-                {
-                    int temp = weight - ptr_map_time[i][end];
-                    if (temp == d[i])
-                    { 
-                        weight = temp;
-                        end = i;
-                        ver[k] = i;
-                        k++;
-                    }
-                }
-        }
-        
-        printf("\nВывод кратчайшего пути:\n");
-        for (int n = k - 1; n >= 0; n--) {
-            if (rush_hour_mode)
-                printf("%3d мин", (3 + d[ver[n]]));
-            else
-                printf("%3d мин", (4 + d[ver[n]]));
-            printf(" -> %s\n", ptr_name_of_statiton[ver[n]]);
-        }
-        
-        int tmp_res = 0;
-        if (d[station_2] < 60)
-            if (rush_hour_mode) printf("Время Вашего пути составит: %d мин\n", d[station_2] + 3 + 2);
-            else printf("Время Вашего пути составит: %d мин\n", d[station_2] + 4 + 2);
-        else
-        {
-            if (rush_hour_mode) tmp_res = d[station_2] + 3 + 2;
-            else tmp_res = d[station_2] + 4 + 2;
-            int hour = tmp_res / 60;
-            tmp_res = tmp_res % 60;
-            if (tmp_res == 0)
-                printf("Время Вашего пути составит: %d ч\n", hour);
-            else
-                printf("Время Вашего пути составит: %d ч %d мин\n", hour, tmp_res);
-        }
-
-        free(d);
-        free(v);
-        free(ver);
-
-        printf("\nМЕНЮ. Введите, пожалуйста:\n"
-            "ЛЮБОЕ ЧИСЛО - продолжить работу\n"
-            "      0     - завершить работу\n");
-        printf("Действие: ");
-        scanf("%d", &choice);
-        getchar();
-
-        free(ptr_map_time);
-        free(ptr_name_of_statiton);
-    }
-    return 0;
+	system("pause");
+	return 0;
 }
