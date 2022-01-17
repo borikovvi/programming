@@ -5,7 +5,7 @@
 #include <string.h>
 #include <locale.h>
 #include <Windows.h>
-#define mcontrol 777
+#define mcontrol 777 //you are genius
 char** ptr_name_of_statiton;// указатель на матрицу name_of_statiton
 int** ptr_map_time;// указатель на матрицу map_time
 int station_1 = -1, station_2 = -1;
