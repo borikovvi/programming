@@ -1,20 +1,30 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 #include <locale.h>
 #include <Windows.h>
+#include <time.h>
+#include "math.h"
+#include <intrin.h >
+#pragma intrinsic(__rdtsc)
+char a[10] = { NULL };
+char b[30] = { NULL };
+char c[30] = { NULL };
+int d_d;
 char** ptr_name_of_statiton;// указатель на матрицу name_of_statiton
 int** ptr_map_time;// указатель на матрицу map_time
 int station_1 = -1, station_2 = -1;
-int N = 1;
+int N = 72;
 int rush_hour_mode = 0;
+char** name_of_statiton = NULL;
+int** map_time = NULL;// это матрица со станциями
 void input() {
     FILE* input;
     input = fopen("input.txt", "r");
-    char city[500] = { NULL }; // выводим какую-то фразу в начале
-    fgets(city, 500, input);
+    //char city[500] = { NULL }; // выводим какую-то фразу в начале
+    //fgets(city, 500, input);
     while (1) {
         char ch;
         fscanf(input, "%c", &ch);
@@ -25,11 +35,11 @@ void input() {
     input = fopen("input.txt", "r");
 
 
-    fgets(city, 500, input);
-    printf("%s", city);
+    //fgets(city, 500, input);
+   // printf("%s", city);
 
 
-    char** name_of_statiton = NULL;
+    
     name_of_statiton = (char**)calloc(N, sizeof(char*));
     for (int i = 0; i < N; i++) {
         name_of_statiton[i] = (char*)calloc(30, sizeof(char));
@@ -60,7 +70,7 @@ void input() {
     //}// выводим названия станций в консоль
 
 
-    int** map_time = NULL;// это матрица со станциями
+    
     map_time = (int**)calloc(N, sizeof(int*));
     for (int i = 0; i < N; i++) {
         map_time[i] = (int*)calloc(N, sizeof(int));
@@ -69,22 +79,22 @@ void input() {
 
 
     int g;
-    char s[6] = { NULL };
-    printf("Укажите время начала Вашей поездки: ");
-    fgets(s, 6, stdin);
-    getchar();
-    double x = atof(s);
+    //char s[6] = { NULL };
+    //printf("Укажите время начала Вашей поездки: ");
+    //fgets(s, 6, a);
+   //getchar();
+    double x = atof(a);
 
-    printf("\n");
+    //printf("\n");
     if (x >= 0 && x < 6) {
-        printf("К сожалению, в указанное Вами время метрополитен закрыт. Попробуйте выбрать другое время для поездки.\n");
-        printf("Укажите время начала Вашей поездки: \n");
-        fgets(s, 6, stdin);
-        getchar();
-        double x = atof(s);
+         /*printf("К сожалению, в указанное Вами время метрополитен закрыт. Попробуйте выбрать другое время для поездки.\n");
+      printf("Укажите время начала Вашей поездки: \n");*/
+        //fgets(s, 6, stdin);
+        //getchar();
+        double x = atof(a);
 
     }
-    
+
     if ((x >= 6 && x < 12) || (x >= 18 && x < 24)) {
         rush_hour_mode = 1;
         while (1) {
@@ -136,12 +146,13 @@ void input() {
 void where_go(char** names) {
     char st_1[30] = { NULL };
     char st_2[30] = { NULL };
-    printf("Ниже укажите, пожалуйста, две станции.\n");
+    //printf("Ниже укажите, пожалуйста, две станции.\n");
 
 
     while (1) {
-        printf("ОТКУДА: ");
-        fgets(st_1, 30, stdin);
+        // printf("ОТКУДА: ");
+        //fgets(st_1, 30, b);
+        strcpy(st_1, b);
         for (int i = 29; i >= 0; i--) {
             if (st_1[i] != 0) {
                 st_1[i] = 0;
@@ -153,13 +164,14 @@ void where_go(char** names) {
             if (strcmp(st_1, ptr_name_of_statiton[i]) == 0) station_1 = i;
         }
         if (station_1 == -1) {
-            printf("Ошибка! Некорректный ввод! Пожалуйста, введите название станции еще раз.\n");
+           // printf("Ошибка! Некорректный ввод! Пожалуйста, введите название станции еще раз.\n");
         }
         else break;
     }
     while (1) {
-        printf("КУДА: ");
-        fgets(st_2, 30, stdin);
+        //printf("КУДА: ");
+        //fgets(st_2, 30, c);
+        strcpy(st_2, c);
         for (int i = 29; i >= 0; i--) {
             if (st_2[i] != 0) {
                 st_2[i] = 0;
@@ -171,7 +183,7 @@ void where_go(char** names) {
             if (strcmp(st_2, ptr_name_of_statiton[i]) == 0) station_2 = i;
         }
         if (station_2 == -1) {
-            printf("Ошибка! Некорректный ввод! Пожалуйста, введите название станции еще раз.\n");
+            //printf("Ошибка! Некорректный ввод! Пожалуйста, введите название станции еще раз.\n");
         }
         else break;
     }
@@ -183,14 +195,27 @@ void where_go(char** names) {
 
 int main()
 {
+    int Count = 0;
+    FILE* inp;
+    inp = fopen("test.txt", "r");
+
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
     setlocale(LC_ALL, "Russian");
 
-
+    
     int choice = 1;
-
+   
+    unsigned __int64 start_q = __rdtsc();
     while (choice != 0) {
+        fgets(a, 10, inp);
+        fgets(b, 30, inp);
+        fgets(c, 30, inp);
+        
+        
+        fscanf(inp, "%d", &d_d);
+        getc(inp);
+        
         input();
         where_go(ptr_name_of_statiton);
 
@@ -266,65 +291,62 @@ int main()
                     }
                 }
         }
-        // Вывод пути (начальная вершина оказалась в конце массива из k элементов)
+
+        
+        
         //printf("\nВывод кратчайшего пути:\n");
         //for (int n = k - 1; n >= 0; n--) {
-        //    //printf("%3d ", ver[i]);
+        //    if (rush_hour_mode)
+        //        printf("%3d мин", (3 + d[ver[n]])); // час-пик
+        //    else
+        //        printf("%3d мин", (4 + d[ver[n]])); // стандарт
         //    printf(" -> %s\n", ptr_name_of_statiton[ver[n]]);
         //}
-        ///*printf("\n");
-        //printf("Ваше время в пути составит: %d минут.\n", d[station_2]);*/
+        //printf("\n");
+        //printf("Ваше время в пути составит: %d минут.\n", d[station_2]);
+        //int tmp_res = 0;
         //if (d[station_2] < 60)
-        //    printf("Время Вашего пути составит: %d мин\n", d[station_2]);
+        //    if (rush_hour_mode) printf("Время Вашего пути составит: %d мин\n", d[station_2] + 3 + 2);
+        //    else printf("Время Вашего пути составит: %d мин\n", d[station_2] + 4 + 2);
         //else
         //{
-        //    int hour = d[station_2] / 60;
-        //    d[station_2] = d[station_2] % 60;
-        //    if (d[station_2] == 0)
+        //    if (rush_hour_mode) tmp_res = d[station_2] + 3 + 2;
+        //    else tmp_res = d[station_2] + 4 + 2;
+        //    int hour = tmp_res / 60;
+        //    tmp_res = tmp_res % 60;
+        //    if (tmp_res == 0)
         //        printf("Время Вашего пути составит: %d ч\n", hour);
         //    else
-        //        printf("Время Вашего пути составит: %d ч %d мин\n", hour, d[station_2]);
+        //        printf("Время Вашего пути составит: %d ч %d мин\n", hour, tmp_res);
         //}
-        printf("\nВывод кратчайшего пути:\n");
-        for (int n = k - 1; n >= 0; n--) {
-            if (rush_hour_mode)
-                printf("%3d мин", (3 + d[ver[n]])); // час-пик
-            else
-                printf("%3d мин", (4 + d[ver[n]])); // стандарт
-            printf(" -> %s\n", ptr_name_of_statiton[ver[n]]);
-        }
-        /*printf("\n");
-        printf("Ваше время в пути составит: %d минут.\n", d[station_2]);*/
-        int tmp_res = 0;
-        if (d[station_2] < 60)
-            if (rush_hour_mode) printf("Время Вашего пути составит: %d мин\n", d[station_2] + 3 + 2);
-            else printf("Время Вашего пути составит: %d мин\n", d[station_2] + 4 + 2);
-        else
-        {
-            if (rush_hour_mode) tmp_res = d[station_2] + 3 + 2;
-            else tmp_res = d[station_2] + 4 + 2;
-            int hour = tmp_res / 60;
-            tmp_res = tmp_res % 60;
-            if (tmp_res == 0)
-                printf("Время Вашего пути составит: %d ч\n", hour);
-            else
-                printf("Время Вашего пути составит: %d ч %d мин\n", hour, tmp_res);
-        }
+        Count++;
+        printf("Pass - %d\n", Count);
 
         //getchar();
         free(d);
         free(v);
         free(ver);
+        for (int i = 0; i < N; i++) {
+            free(map_time[i]);
+            free(name_of_statiton[i]);
+        }
 
-        printf("\nМЕНЮ. Введите, пожалуйста:\n"
+        /*printf("\nМЕНЮ. Введите, пожалуйста:\n"
             "ЛЮБОЕ ЧИСЛО - продолжить работу\n"
             "      0     - завершить работу\n");
-        printf("Действие: ");
-        scanf("%d", &choice);
-        getchar();
+        printf("Действие: ");*/
+        choice = d_d;
+        //getchar();
 
         free(ptr_map_time);
         free(ptr_name_of_statiton);
     }
+    fclose(inp);
+    //int end_time = clock(); // конечное время
+    //int search_time = (end_time - start_time);
+    //printf("%d - msec", search_time);
+    unsigned __int64 finish_q = __rdtsc();
+
+    printf("time = %I64d", finish_q - start_q);
     return 0;
 }
