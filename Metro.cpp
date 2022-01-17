@@ -28,6 +28,28 @@ char* gets(char* s)
 	return s;
 }
 
+char* gets(char* s)
+{
+	fflush(stdin);
+
+	int i, k = getchar();
+
+	if (k == EOF)
+		return NULL;
+
+	for (i = 0; k != EOF && k != '\n'; ++i) {
+		s[i] = k;
+		k = getchar();
+
+		if (k == EOF && !feof(stdin))
+			return NULL;
+	}
+
+	s[i] = '\0';
+
+	return s;
+}
+
 int getStationIndex(char* station)
 {
 	for (int i = 0; i < 72; i++)
